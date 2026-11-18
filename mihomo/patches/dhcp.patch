@@ -1,0 +1,8 @@
+diff --color -ruN a/interfaces/bindtodevice_qnx.go b/interfaces/bindtodevice_qnx.go
+--- a/interfaces/bindtodevice_qnx.go	1970-01-01 08:00:00.000000000 +0800
++++ b/interfaces/bindtodevice_qnx.go	2026-11-16 08:24:50.997428227 +0800
+@@ -0,0 +1,4 @@
++//go:build qnx
++package interfaces
++import "errors"
++func BindToInterface(fd int, ifname string) error { return errors.New("DHCP bind to interface unsupported on QNX") }

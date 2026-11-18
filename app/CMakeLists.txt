@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(bb10_proxy_ui LANGUAGES CXX)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/arm/o.le-v7-g")
+include(BB10Qt4)
+qt4_wrap_cpp(MOC_SOURCES src/proxycontroller.h src/clashrest.h src/clashstream.h)
+add_executable(bb10proxy src/main.cpp src/proxycontroller.cpp src/clashrest.cpp src/clashstream.cpp ${MOC_SOURCES})
+target_include_directories(bb10proxy PRIVATE src)
+target_link_libraries(bb10proxy PRIVATE bbcascades bbdata bbsystem bbcascadespickers QtDeclarative QtScript QtSvg QtSql sqlite3 z QtXmlPatterns QtGui QtNetwork socket QtCore crypto)

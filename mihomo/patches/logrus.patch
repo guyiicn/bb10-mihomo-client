@@ -1,0 +1,10 @@
+diff --color -ruN a/terminal_check_qnx.go b/terminal_check_qnx.go
+--- a/terminal_check_qnx.go	1970-01-01 08:00:00.000000000 +0800
++++ b/terminal_check_qnx.go	2026-11-16 08:24:50.921950417 +0800
+@@ -0,0 +1,6 @@
++//go:build qnx
++
++package logrus
++
++// Terminal color detection is disabled for the initial QNX build.
++func isTerminal(fd int) bool { return false }

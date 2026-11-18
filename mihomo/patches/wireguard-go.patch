@@ -1,0 +1,40 @@
+diff --color -ruN a/ipc/uapi_qnx.go b/ipc/uapi_qnx.go
+--- a/ipc/uapi_qnx.go	1970-01-01 08:00:00.000000000 +0800
++++ b/ipc/uapi_qnx.go	2026-11-16 08:24:50.664291966 +0800
+@@ -0,0 +1,10 @@
++//go:build qnx
++package ipc
++import "golang.org/x/sys/unix"
++const (
++ IpcErrorIO = -int64(unix.EIO)
++ IpcErrorProtocol = -int64(unix.EPROTO)
++ IpcErrorInvalid = -int64(unix.EINVAL)
++ IpcErrorPortInUse = -int64(unix.EADDRINUSE)
++ IpcErrorUnknown = -55
++)
+diff --color -ruN a/rwcancel/rwcancel.go b/rwcancel/rwcancel.go
+--- a/rwcancel/rwcancel.go	2026-11-16 08:24:50.653537885 +0800
++++ b/rwcancel/rwcancel.go	2026-11-16 08:24:50.664649827 +0800
+@@ -1,4 +1,4 @@
+-//go:build !windows && !wasm
++//go:build !windows && !wasm && !qnx
+ 
+ /* SPDX-License-Identifier: MIT
+  *
+diff --color -ruN a/rwcancel/rwcancel_qnx.go b/rwcancel/rwcancel_qnx.go
+--- a/rwcancel/rwcancel_qnx.go	1970-01-01 08:00:00.000000000 +0800
++++ b/rwcancel/rwcancel_qnx.go	2026-11-16 08:24:50.665041015 +0800
+@@ -0,0 +1,13 @@
++//go:build qnx
++package rwcancel
++import "errors"
++var errUnsupported = errors.New("wireguard rwcancel is unavailable on QNX")
++type RWCancel struct{}
++func NewRWCancel(fd int) (*RWCancel, error) { return nil, errUnsupported }
++func RetryAfterError(err error) bool { return false }
++func (rw *RWCancel) ReadyRead() bool { return false }
++func (rw *RWCancel) ReadyWrite() bool { return false }
++func (rw *RWCancel) Read(p []byte) (int, error) { return 0, errUnsupported }
++func (rw *RWCancel) Write(p []byte) (int, error) { return 0, errUnsupported }
++func (rw *RWCancel) Cancel() error { return errUnsupported }
++func (rw *RWCancel) Close() {}

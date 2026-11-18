@@ -1,0 +1,40 @@
+# Pinned upstream sources for the mihomo core and its QNX dependency overrides.
+#
+# Why this file exists
+# --------------------
+# The BB10/QNX build of mihomo needs 7 dependency modules patched for QNX (the OS
+# is not in Go's standard build-tag set, so each module needs a *_qnx.go port and
+# a one-line build-tag tweak on the generic unix file it would otherwise match).
+# Historically those patches lived as absolute-path `replace` forks in sibling
+# directories, which is not reproducible. This file + patches/ + apply-patches.sh
+# make the override tree regenerable from pinned upstream + small committed diffs.
+#
+# Format:
+#   mihomo  <import-path>  <git-commit>  <local-dir>
+#     -> scripts/fetch-mihomo.sh blobless-clones the mihomo core at that commit into
+#        mihomo/<local-dir>/ and applies patches/mihomo.patch (the QNX DNS port).
+#   module  <import-path>  <version>  <local-name>
+#     -> scripts/apply-patches.sh fetches <import-path>@<version>, copies it to
+#        mihomo/overrides-upstream/<local-name>, then applies patches/<local-name>.patch.
+#        <local-name> is also the basename of the patch file.
+
+# mihomo core (main module). Base commit identified by matching go.mod's require set
+# + the Nov-11 file timestamps to metacubex/mihomo's Alpha branch; the local delta is
+# a 5-file QNX patch (dns packetconn split + go.mod go-directive bump / yaml.v3 /
+# x/sys replace). Verified: a pristine checkout + patches/mihomo.patch reproduces the
+# source byte-identical, and the QNX binary built from it is identical to the legacy
+# sibling-tree build (modulo the embedded override path; see REFACTOR-PLAN.md).
+mihomo  github.com/metacubex/mihomo  0455d0d28c4526937380505153e65a843d8612e8  upstream
+
+module  github.com/metacubex/wireguard-go  v0.0.0-20250820062549-a6cecdd7f57f  wireguard-go
+module  github.com/metacubex/bbolt         v0.0.0-20260706163408-d4ec34ad7c48  bbolt
+module  github.com/metacubex/sing          v0.5.9                              sing
+module  github.com/metacubex/sing-tun      v0.4.29                             sing-tun
+module  github.com/sirupsen/logrus         v1.9.4                              logrus
+module  github.com/u-root/uio              v0.0.0-20230220225925-ffce2a382923  uio
+module  github.com/insomniacslk/dhcp       v0.0.0-20250109001534-8abf58130905  dhcp
+
+# Two further replaces are already reproducible (published versions, no local
+# patch); patches/mihomo.patch adds them to the core go.mod. Recorded for clarity:
+#   google.golang.org/protobuf => github.com/metacubex/protobuf-go v0.0.0-20260306035419-7ceee0674686
+#   golang.org/x/sys           => github.com/XIAZY/go-sys-qnx     v0.0.0-20261016215730-6348336c2429

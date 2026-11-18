@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+ <id>local.bb10.proxyresearch</id>
+ <name>BB10 Proxy Research</name>
+ <versionNumber>0.1.0</versionNumber><buildId>39</buildId>
+ <description>Experimental local proxy core manager for BlackBerry 10.</description>
+ <author>Local Research</author>
+ <icon><image>assets/icon.png</image></icon>
+ <initialWindow><autoOrients>false</autoOrients><systemChrome>none</systemChrome></initialWindow>
+ <configuration name="Device-Debug"><platformArchitecture>armle-v7</platformArchitecture><asset path="build/cmake/arm/o.le-v7-g/bb10proxy" entry="true" type="Qnx/Elf">bb10proxy</asset></configuration>
+ <asset path="assets">assets</asset>
+ <asset path="build/bin/configtool" type="Qnx/Elf">bin/configtool</asset>
+ <asset path="build/bin/mihomo" type="Qnx/Elf">bin/mihomo</asset>
+ <asset path="build/bin/tun-helper" type="Qnx/Elf">bin/tun-helper</asset>
+ <permission system="true">run_native</permission><permission>access_shared</permission><permission>access_internet</permission>
+ <env var="LD_LIBRARY_PATH" value="app/native/lib:/usr/lib/qt4/lib"/>
+</qnx>

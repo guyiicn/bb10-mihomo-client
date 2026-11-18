@@ -1,0 +1,89 @@
+diff --color -ruN pa/dns/packetconn_other.go pb/dns/packetconn_other.go
+--- pa/dns/packetconn_other.go	1970-01-01 08:00:00.000000000 +0800
++++ pb/dns/packetconn_other.go	2026-11-16 08:42:31.331042427 +0800
+@@ -0,0 +1,7 @@
++//go:build !qnx
++
++package dns
++
++import "net"
++
++func servePacketConn(p net.PacketConn) net.PacketConn { return p }
+diff --color -ruN pa/dns/packetconn_qnx.go pb/dns/packetconn_qnx.go
+--- pa/dns/packetconn_qnx.go	1970-01-01 08:00:00.000000000 +0800
++++ pb/dns/packetconn_qnx.go	2026-11-16 08:42:31.331017525 +0800
+@@ -0,0 +1,16 @@
++//go:build qnx
++
++package dns
++
++import "net"
++
++// plainPacketConn hides *net.UDPConn from miekg/dns. For a *net.UDPConn the
++// library first enables IP_PKTINFO-style control messages through
++// golang.org/x/net/ipv4 and ipv6, which are stubs on QNX and return "not
++// implemented"; ActivateAndServe then returns before reading a single packet
++// while the socket stays bound, so every UDP query times out. With a plain
++// net.PacketConn the library uses ReadFrom/WriteTo and needs no control
++// messages. The reply source address is then chosen by the routing table.
++type plainPacketConn struct{ net.PacketConn }
++
++func servePacketConn(p net.PacketConn) net.PacketConn { return plainPacketConn{p} }
+diff --color -ruN pa/dns/server.go pb/dns/server.go
+--- pa/dns/server.go	2026-11-16 08:42:31.307783058 +0800
++++ pb/dns/server.go	2026-11-16 08:42:31.330857396 +0800
+@@ -111,8 +111,10 @@
+ 		}
+ 
+ 		log.Infoln("DNS server(UDP) listening at: %s", p.LocalAddr().String())
+-		server.udpServer = &D.Server{Addr: addr, PacketConn: p, Handler: server.UDPHandler()}
+-		_ = server.udpServer.ActivateAndServe()
++		server.udpServer = &D.Server{Addr: addr, PacketConn: servePacketConn(p), Handler: server.UDPHandler()}
++		if err := server.udpServer.ActivateAndServe(); err != nil {
++			log.Errorln("DNS server(UDP) stopped: %s", err.Error())
++		}
+ 	}()
+ 
+ 	go func() {
+diff --color -ruN pa/go.mod pb/go.mod
+--- pa/go.mod	2026-11-16 08:42:31.308009479 +0800
++++ pb/go.mod	2026-11-16 08:42:31.331286007 +0800
+@@ -1,6 +1,6 @@
+ module github.com/metacubex/mihomo
+ 
+-go 1.20
++go 1.26.0
+ 
+ require (
+ 	github.com/bahlo/generic-list-go v0.2.0
+@@ -145,7 +145,11 @@
+ 	golang.org/x/text v0.22.0 // indirect
+ 	golang.org/x/time v0.10.0 // indirect
+ 	golang.org/x/tools v0.24.0 // indirect
++	gopkg.in/yaml.v3 v3.0.1 // indirect
+ )
+ 
+ // for https://github.com/golang/protobuf/issues/1704
+ replace google.golang.org/protobuf => github.com/metacubex/protobuf-go v0.0.0-20260306035419-7ceee0674686
++
++replace golang.org/x/sys => github.com/XIAZY/go-sys-qnx v0.0.0-20261016215730-6348336c2429
++
+diff --color -ruN pa/go.sum pb/go.sum
+--- pa/go.sum	2026-11-16 08:42:31.308024825 +0800
++++ pb/go.sum	2026-11-16 08:42:31.331317660 +0800
+@@ -1,6 +1,8 @@
+ github.com/RyuaNerin/go-krypto v1.3.0 h1:smavTzSMAx8iuVlGb4pEwl9MD2qicqMzuXR2QWp2/Pg=
+ github.com/RyuaNerin/go-krypto v1.3.0/go.mod h1:9R9TU936laAIqAmjcHo/LsaXYOZlymudOAxjaBf62UM=
+ github.com/RyuaNerin/testingutil v0.1.0 h1:IYT6JL57RV3U2ml3dLHZsVtPOP6yNK7WUVdzzlpNrss=
++github.com/XIAZY/go-sys-qnx v0.0.0-20261016215730-6348336c2429 h1:VL1spu7Xxzj87NVO/NvZ7zF7SxyM0qTp9L+6NBWoQ04=
++github.com/XIAZY/go-sys-qnx v0.0.0-20261016215730-6348336c2429/go.mod h1:hNLxWAXmnKAxqDtdwIYC4bM9oQPEecfsnNMuSxOs3og=
+ github.com/Yawning/aez v0.0.0-20211027044916-e49e68abd344 h1:cDVUiFo+npB0ZASqnw4q90ylaVAbnYyx0JYqK4YcGok=
+ github.com/Yawning/aez v0.0.0-20211027044916-e49e68abd344/go.mod h1:9pIqrY6SXNL8vjRQE5Hd/OL5GyK/9MrGUWs87z/eFfk=
+ github.com/ajg/form v1.7.1 h1:OsnBDzTkrWdrxvEnO68I72ZVGJGNaMwPhoAm0V+llgc=
+@@ -327,5 +329,6 @@
+ golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+ gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
++gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+ gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+ software.sslmate.com/src/go-pkcs12 v0.4.0 h1:H2g08FrTvSFKUj+D309j1DPfk5APnIdAQAB8aEykJ5k=
