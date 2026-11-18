@@ -146,4 +146,4 @@ A fast orientation for anyone (human or AI) changing this code. **Read this befo
 - Routing data: **[MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)**.
 - Root: AutoRoot (BB10).
 
-This repository contains the glue code around the above (C++ UI, Go config tool, packaging scripts). The bundled mihomo core is GPL-3.0 — honor its license when redistributing.
+This repository contains the glue code around the above (C++ UI, Go config tool, packaging scripts). It is licensed under **GPL-3.0** (see [`LICENSE`](LICENSE)), matching the bundled mihomo core. Release binaries (`.bar`) include the GPL-3.0 mihomo core; the corresponding source is this repository plus the pinned-upstream/patches in `mihomo/` (see `docs/DEPENDENCIES.md`).
